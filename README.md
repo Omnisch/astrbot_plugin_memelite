@@ -62,14 +62,14 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 ## ⌨️ 命令
 
-|     命令      |                    说明                    |
-|:-------------:|:-----------------------------------------------:|
-|   {关键词}     |   触发meme合成            |
-| /meme帮助      | 查看所有能触发meme合成的关键词  |
-| /meme详情 xxx  | 具体查看某个meme的参数         |
-|   禁用meme xxx    |   禁用指定meme           |
-|   启用meme xxx    |   启用指定meme           |
-|   meme黑名单     |   查看哪些meme被禁用了        |
+| 命令             | 说明                        |
+|:---------------:|:---------------------------:|
+| \<关键词>        | 触发表情合成          |
+| /meme list      | 查看所有能触发表情合成的关键词 |
+| /meme help \<name>    | 查看具体某个表情的参数  |
+| /meme disable \<name> | 禁用指定表情    |
+| /meme enable \<name>  | 启用指定表情    |
+| /meme blacklist | 查看哪些表情被禁用了   |
 
 关键词包括：
 

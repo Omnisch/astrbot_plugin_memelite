@@ -9,10 +9,9 @@ from meme_generator.exception import MemeGeneratorException
 from meme_generator.utils import run_sync, render_meme_list
 
 from astrbot import logger
-from astrbot.api.event import filter
+from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
 from astrbot.core import AstrBotConfig
-from astrbot.core.platform import AstrMessageEvent
 
 import io
 from typing import Any, List, Literal, Optional, Tuple
@@ -28,15 +27,15 @@ class MemeProperties:
     labels: list[Literal["new", "hot"]] = field(default_factory=list)
 
 
-# TODO 禁用meme、new标签、hot标签
+# TODO 禁用 meme、new 标签、hot 标签
 
 
 @register(
     "astrbot_plugin_memelite",
-    "Zhalslar",
-    "表情包生成器，制作各种沙雕表情（本地部署，但轻量化）",
-    "1.0.8",
-    "https://github.com/Zhalslar/astrbot_plugin_memelite",
+    "Omnisch",
+    "表情包生成器，轻量化本地部署",
+    "2.0.0",
+    "https://github.com/Omnisch/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -56,12 +55,17 @@ class MemePlugin(Star):
 
         self.is_check_resources: bool = config.get("is_check_resources", True)
         if self.is_check_resources:
-            logger.info("正在检查memes资源文件...")
+            logger.info("正在检查 memes 资源文件...")
             asyncio.create_task(check_resources())
 
-    @filter.command("meme帮助", alias={"表情帮助, 表情列表"})
-    async def memes_help(self, event: AstrMessageEvent):
-        "查看有哪些关键词可以触发meme"
+    @filter.command_group("meme")
+    def meme(self):
+        """表情包生成器"""
+        pass
+    
+    @meme.command("list")
+    async def list(self, event: AstrMessageEvent):
+        """查看关键词列表"""
         meme_list: List[Tuple[Meme, Optional[MemeProperties]]] = [
             (meme, MemeProperties(labels=[])) for meme in self.memes
         ]
@@ -73,27 +77,27 @@ class MemePlugin(Star):
         )
         yield event.chain_result([Comp.Image.fromBytes(image_io.getvalue())])
 
-    @filter.command("meme详情", alias={"表情详情"})
-    async def meme_details_show(
+    @meme.command("help")
+    async def show_details(
         self, event: AstrMessageEvent, keyword: str | int | None = None
     ):
-        "查看指定meme需要的参数"
+        """查看指定表情需要的参数"""
         if not keyword:
-            yield event.plain_result("未指定要查看的meme")
+            yield event.plain_result("未指定表情")
             return
         keyword = str(keyword)
         target_keyword = next((k for k in self.meme_keywords if k == keyword), None)
         if target_keyword is None:
-            yield event.plain_result("未支持的meme关键词")
+            yield event.plain_result("不支持的表情")
             return
 
-        # 匹配meme
+        # 匹配 meme
         meme = self._find_meme(keyword)
         if not meme:
-            yield event.plain_result("未找到相关meme")
+            yield event.plain_result("未找到表情")
             return
 
-        # 提取meme的所有参数
+        # 提取 meme 的所有参数
         name = meme.key
         params_type = meme.params_type
         keywords = meme.keywords
@@ -133,7 +137,7 @@ class MemePlugin(Star):
 
         args_type = getattr(params_type, "args_type", None)
         if args_type:
-            meme_info += "其它参数(格式: key=value)：\n"
+            meme_info += "其它参数 (格式: key=value)：\n"
             for opt in args_type.parser_options:
                 flags = [n for n in opt.names if n.startswith("--")]
                 # 构造参数名部分
@@ -156,57 +160,57 @@ class MemePlugin(Star):
         ]
         yield event.chain_result(chain)
 
-    @filter.command("禁用meme")
+    @meme.command("disable")
     async def add_supervisor(
         self, event: AstrMessageEvent, meme_name: str | None = None
     ):
-        """禁用meme"""
+        """禁用表情"""
         if not meme_name:
-            yield event.plain_result("未指定要禁用的meme")
+            yield event.plain_result("未指定要禁用的表情")
             return
         if meme_name not in self.meme_keywords:
-            yield event.plain_result(f"meme: {meme_name} 不存在")
+            yield event.plain_result(f"表情: {meme_name}不存在")
             return
         if meme_name in self.memes_disabled_list:
-            yield event.plain_result(f"meme: {meme_name} 已被禁用")
+            yield event.plain_result(f"表情: {meme_name}已被禁用")
             return
         self.memes_disabled_list.append(meme_name)
         self.config.save_config(replace_config=self.config)
-        yield event.plain_result(f"已禁用meme: {meme_name}")
-        logger.info(f"当前禁用meme: {self.config['memes_disabled_list']}")
+        yield event.plain_result(f"已禁用表情: {meme_name}")
+        logger.info(f"当前禁用表情: {self.config['memes_disabled_list']}")
 
-    @filter.command("启用meme")
+    @meme.command("enable")
     async def remove_supervisor(
         self, event: AstrMessageEvent, meme_name: str | None = None
     ):
-        """启用meme"""
+        """启用表情"""
         if not meme_name:
-            yield event.plain_result("未指定要禁用的meme")
+            yield event.plain_result("未指定要启用的表情")
             return
         if meme_name not in self.meme_keywords:
-            yield event.plain_result(f"meme: {meme_name} 不存在")
+            yield event.plain_result(f"表情: {meme_name}不存在")
             return
         if meme_name not in self.memes_disabled_list:
-            yield event.plain_result(f"meme: {meme_name} 未被禁用")
+            yield event.plain_result(f"表情: {meme_name}未被禁用")
             return
         self.memes_disabled_list.remove(meme_name)
         self.config.save_config(replace_config=self.config)
-        yield event.plain_result(f"已禁用meme: {meme_name}")
+        yield event.plain_result(f"已启用表情: {meme_name}")
 
-    @filter.command("meme黑名单")
+    @meme.command("blacklist")
     async def list_supervisors(self, event: AstrMessageEvent):
-        """查看禁用的meme"""
-        yield event.plain_result(f"当前禁用的meme: {self.memes_disabled_list}")
+        """查看禁用的表情"""
+        yield event.plain_result(f"当前禁用的表情: {self.memes_disabled_list}")
 
     @filter.event_message_type(EventMessageType.ALL)
     async def meme_handle(self, event: AstrMessageEvent):
         """
-        处理 meme 生成的主流程。
+        处理表情生成的主流程。
 
         功能描述：
-        - 支持匹配所有 meme 关键词。
+        - 支持匹配所有表情关键词。
         - 支持从原始消息中提取参数, 空格隔开参数。
-        - 支持引用消息传参 。
+        - 支持引用消息传参。
         - 自动获取消息发送者、被 @ 的用户以及 bot 自身的相关参数。
         """
 
@@ -226,7 +230,7 @@ class MemePlugin(Star):
                     second_seg, Comp.Plain
                 ) and not second_seg.text.startswith(self.prefix):
                     return
-            # @bot触发
+            # @bot 触发
             elif isinstance(first_seg, Comp.At):
                 if str(first_seg.qq) != str(event.get_self_id()):
                     return
@@ -249,10 +253,10 @@ class MemePlugin(Star):
         if not keyword or keyword in self.memes_disabled_list:
             return
 
-        # 匹配meme
+        # 匹配表情
         meme = self._find_meme(keyword)
         if not meme:
-            yield event.plain_result("未找到相关meme")
+            yield event.plain_result("未找到相关表情")
             return
 
         # 收集参数
@@ -284,7 +288,7 @@ class MemePlugin(Star):
         yield event.chain_result(chain)  # type: ignore
 
     def _find_meme(self, keyword: str) -> Meme | None:
-        """根据关键词寻找meme"""
+        """根据关键词寻找表情"""
         for meme in self.memes:
             if keyword == meme.key or any(k == keyword for k in meme.keywords):
                 return meme
@@ -390,12 +394,10 @@ class MemePlugin(Star):
                 options["user_infos"] = [{"name": nickname, "gender": sex}]
                 target_names.append(nickname)
 
-        # 确保图片数量在min_imag
-
         if not target_names:
             target_names.append(sender_name)
 
-        # 确保图片数量在min_images到max_images之间(参数足够即可)
+        # 确保图片数量在 min_images 到 max_images 之间 (参数足够即可)
         if len(images) < min_images:
             if use_avatar := await self.get_avatar(event, send_id):
                 images.insert(0, use_avatar)
@@ -404,7 +406,7 @@ class MemePlugin(Star):
                 images.insert(0, bot_avatar)
         meme_images = images[:max_images]
 
-        # 确保文本数量在min_texts到max_texts之间(参数足够即可)
+        # 确保文本数量在 min_texts 到 max_texts 之间 (参数足够即可)
         if len(texts) < min_texts and target_names:
             texts.extend(target_names)
         if len(texts) < min_texts and default_texts:
@@ -431,9 +433,9 @@ class MemePlugin(Star):
 
     @staticmethod
     def compress_image(image_io: io.BytesIO, max_size: int = 512) -> io.BytesIO | None:
-        """压缩静态图片或GIF到max_size大小"""
+        """压缩静态图片或 GIF 到 max_size 大小"""
         try:
-            # 将输入的bytes加载为图片
+            # 将输入的 bytes 加载为图片
             img = Image.open(image_io)
             output = io.BytesIO()
 
@@ -443,10 +445,10 @@ class MemePlugin(Star):
                 # 如果是静态图片，检查尺寸并压缩
                 if img.width > max_size or img.height > max_size:
                     img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
-                # 保存处理后的图片到内存中的BytesIO对象
+                # 保存处理后的图片到内存中的 BytesIO 对象
                 img.save(output, format=img.format)
 
-            # 返回处理后的图片数据（bytes）
+            # 返回处理后的图片数据 (bytes)
             return output
 
         except Exception as e:
