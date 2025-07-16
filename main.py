@@ -34,7 +34,7 @@ class MemeProperties:
     "astrbot_plugin_memelite",
     "Omnisch",
     "表情包生成器，轻量化本地部署",
-    "2.0.0",
+    "2.1.0",
     "https://github.com/Omnisch/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
@@ -260,7 +260,7 @@ class MemePlugin(Star):
             return
 
         # 收集参数
-        images, texts, options = await self._get_parms(event, keyword, meme)
+        images, texts, options = await self._get_params(event, keyword, meme)
 
         # 合成表情
         try:
@@ -293,7 +293,7 @@ class MemePlugin(Star):
             if keyword == meme.key or any(k == keyword for k in meme.keywords):
                 return meme
 
-    async def _get_parms(self, event: AstrMessageEvent, keyword: str, meme: Meme):
+    async def _get_params(self, event: AstrMessageEvent, keyword: str, meme: Meme):
         """收集参数"""
         images: list[bytes] = []
         texts: List[str] = []
@@ -347,7 +347,7 @@ class MemePlugin(Star):
                     target_ids.append(seg_qq)
                     if at_avatar := await self.get_avatar(event, seg_qq):
                         images.append(at_avatar)
-                    # 从消息平台获取At者的额外参数
+                    # 从消息平台获取 At 者的额外参数
                     if result := await self._get_extra(event, target_id=seg_qq):
                         nickname, sex = result
                         options["user_infos"] = [{"name": nickname, "gender": sex}]
@@ -355,13 +355,15 @@ class MemePlugin(Star):
 
             elif isinstance(_seg, Comp.Plain):
                 plains: list[str] = _seg.text.strip().split()
+                param_index = 0
                 for text in plains:
                     text = text.removeprefix(self.prefix).removeprefix(keyword)
-                    # 解析其他参数
-                    if "=" in text:
-                        k, v = text.split("=", 1)
-                        options[k] = v
-                    #  解析@qq
+                    if not text:
+                        continue
+                    # 如果文本被引号包裹，则解析为文本参数
+                    if text.startswith("\"") and text.endswith("\""):
+                        texts.append(text[1:-1])
+                    # 解析 @qq
                     elif text.startswith("@"):
                         target_id = text[1:]
                         if target_id.isdigit():
@@ -372,8 +374,16 @@ class MemePlugin(Star):
                                 nickname, sex = result
                                 options["user_infos"] = [{"name": nickname, "gender": sex}]
                                 target_names.append(nickname)
-                    elif text:
-                        texts.append(text)
+                    # 解析其他参数
+                    elif args_type := params_type.args_type:
+                        field_names = list(args_type.args_model.__annotations__.keys())
+                        if len(field_names) > param_index:
+                            logger.debug(
+                                f"参数 {field_names[param_index]} 使用 {text}"
+                            )
+                            if text != "_":
+                                options[field_names[param_index]] = text
+                        param_index += 1
 
 
 
