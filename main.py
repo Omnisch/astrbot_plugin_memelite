@@ -106,52 +106,43 @@ class MemePlugin(Star):
         min_texts = params_type.min_texts
         max_texts = params_type.max_texts
         default_texts = params_type.default_texts
-        tags = meme.tags
+        # tags = meme.tags
 
         meme_info = ""
         if name:
-            meme_info += f"名称：{name}\n"
+            meme_info += f"键值: {name}\n"
 
         if keywords:
-            meme_info += f"别名：{keywords}\n"
+            meme_info += f"名称: {keywords}\n"
 
         if max_images > 0:
             meme_info += (
-                f"所需图片：{min_images}张\n"
+                f"所需图片: {min_images} 张\n"
                 if min_images == max_images
-                else f"所需图片：{min_images}~{max_images}张\n"
+                else f"所需图片: {min_images}~{max_images} 张\n"
             )
 
         if max_texts > 0:
             meme_info += (
-                f"所需文本：{min_texts}段\n"
+                f"所需文本: {min_texts} 段\n"
                 if min_texts == max_texts
-                else f"所需文本：{min_texts}~{max_texts}段\n"
+                else f"所需文本: {min_texts}~{max_texts} 段\n"
             )
 
         if default_texts:
-            meme_info += f"默认文本：{default_texts}\n"
+            meme_info += f"默认文本: {default_texts}\n"
 
-        if tags:
-            meme_info += f"标签：{list(tags)}\n"
+        # if tags:
+        #     meme_info += f"标签: {list(tags)}\n"
 
         args_type = getattr(params_type, "args_type", None)
         if args_type:
-            meme_info += "其它参数 (格式: key=value)：\n"
-            for opt in args_type.parser_options:
-                flags = [n for n in opt.names if n.startswith("--")]
-                # 构造参数名部分
-                names_str = ", ".join(flags)
-                part = f"  {names_str}"
-                # 默认值
-                default_val = getattr(opt, "default", None)
-                if default_val is not None:
-                    part += f" (默认={default_val})"
-                # 帮助文本
-                help_text = getattr(opt, "help_text", None)
-                if help_text:
-                    part += f" ： {help_text}"
-                meme_info += part + "\n"
+            meme_info += "其他参数 (使用下划线使用默认):\n"
+            fields = args_type.args_model.__annotations__
+            for field_name in fields.keys():
+                field = args_type.args_model.__fields__[field_name]
+                meme_info += f"- {field.description or '无描述'}"
+                meme_info += f" (默认为 {field.default})\n" if field.default else "\n"
 
         preview: bytes = meme.generate_preview().getvalue()  # type: ignore
         chain = [
