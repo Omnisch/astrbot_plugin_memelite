@@ -19,6 +19,7 @@ import astrbot.core.message.components as Comp
 from astrbot.core.star.filter.event_message_type import EventMessageType
 from PIL import Image
 from dataclasses import dataclass, field
+from .args_dict import args_dict
 
 
 @dataclass
@@ -142,7 +143,7 @@ class MemePlugin(Star):
             for field_name in fields.keys():
                 field = args_type.args_model.__fields__[field_name]
                 meme_info += f"- {field.description or '无描述'}"
-                meme_info += f" (默认为 {field.default})\n" if field.default else "\n"
+                meme_info += f" (默认为 {field.default})\n"
 
         preview: bytes = meme.generate_preview().getvalue()  # type: ignore
         chain = [
@@ -369,12 +370,16 @@ class MemePlugin(Star):
                     elif args_type := params_type.args_type:
                         field_names = list(args_type.args_model.__annotations__.keys())
                         if len(field_names) > param_index:
-                            logger.debug(
-                                f"参数 {field_names[param_index]} 使用 {text}"
-                            )
+                            # 下划线使用默认值
                             if text != "_":
+                                # 替换常用中文参数
+                                if text in args_dict:
+                                    text = args_dict[text]
+                                logger.info(
+                                    f"参数 {field_names[param_index]} 使用 {text}"
+                                )
                                 options[field_names[param_index]] = text
-                        param_index += 1
+                            param_index += 1
 
 
 
