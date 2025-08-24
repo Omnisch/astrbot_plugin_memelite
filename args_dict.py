@@ -18,5 +18,13 @@ args_dict = {
     "循环": "loop",
     "套娃": "circle",
 
-    "圆形": "circle",
+    "圆": "circle",
+    "方": "square",
+
+    "简": "zhs",
+    "繁": "zht",
+    "英": "en",
+
+    "等待": "hold",
+    "空": "empty",
 }

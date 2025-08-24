@@ -35,7 +35,7 @@ class MemeProperties:
     "astrbot_plugin_memelite",
     "Omnisch",
     "表情包生成器，轻量化本地部署",
-    "2.1.0",
+    "2.1.1",
     "https://github.com/Omnisch/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
