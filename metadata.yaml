@@ -1,7 +1,7 @@
 name: astrbot_plugin_memelite 
 desc: 表情包生成器，轻量化本地部署
 help: 关键词触发表情包生成
-version: v2.1.1
+version: v2.2.0
 author: Omnisch
 original_author: Zhalslar
 repo: https://github.com/Omnisch/astrbot_plugin_memelite

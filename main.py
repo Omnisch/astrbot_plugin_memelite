@@ -35,7 +35,7 @@ class MemeProperties:
     "astrbot_plugin_memelite",
     "Omnisch",
     "表情包生成器，轻量化本地部署",
-    "2.1.1",
+    "2.2.0",
     "https://github.com/Omnisch/astrbot_plugin_memelite",
 )
 class MemePlugin(Star):
@@ -84,7 +84,16 @@ class MemePlugin(Star):
     ):
         """查看指定表情需要的参数"""
         if not keyword:
-            yield event.plain_result("未指定表情")
+            yield event.plain_result(
+                "Memelite 使用帮助\n"
+                "- /meme help - 查看帮助\n"
+                "- /meme help <关键词> - 查看指定表情需要的参数\n"
+                "- /meme list - 可用表情列表\n"
+                "- /meme enable <关键词> - 启用表情\n"
+                "- /meme disable <关键词> - 禁用表情\n"
+                "- /meme blacklist - 查看禁用的表情\n\n"
+                "用空格隔开参数，文本参数需用半角引号 (\") 包围"
+            )
             return
         keyword = str(keyword)
         target_keyword = next((k for k in self.meme_keywords if k == keyword), None)
