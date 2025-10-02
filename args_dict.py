@@ -22,6 +22,8 @@ args_dict = {
     "正常": "normal",
     "循环": "loop",
     "套娃": "circle",
+    "顺时针": "clockwise",
+    "逆时针": "counterclockwise",
 
     "圆": "circle",
     "方": "square",
