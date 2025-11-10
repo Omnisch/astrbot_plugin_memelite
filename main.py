@@ -22,25 +22,39 @@ class MemePlugin(Star):
     async def initialize(self):
         await self.manager.check_resources()
 
-    @filter.command("meme帮助", alias={"表情帮助", "meme菜单", "meme列表"})
-    async def memes_help(self, event):
+    @filter.command_group("meme")
+    def meme(self):
+        pass
+
+    @meme.command("list", alias={"菜单", "列表"})
+    async def meme_list(self, event: AstrMessageEvent):
+        """查看关键词列表"""
         if output := await self.manager.render_meme_list_image():
             yield event.chain_result([Comp.Image.fromBytes(output)])
         else:
-            yield event.plain_result("meme列表图生成失败")
+            yield event.plain_result("meme 列表图生成失败")
 
-    @filter.command("meme详情", alias={"表情详情", "meme信息"})
-    async def meme_details_show(
+    @meme.command("help", alias={"帮助", "详情", "信息", "参数"})
+    async def meme_help(
         self, event: AstrMessageEvent, keyword: str | int | None = None
     ):
+        """查看指定 meme 需要的参数"""
         if not keyword:
-            yield event.plain_result("未指定要查看的meme")
+            yield event.plain_result(
+                "Memelite 使用帮助\n"
+                "- /meme help <关键词> - 查看指定 meme 需要的参数\n"
+                "- /meme list - 查看关键词列表\n"
+                "- /meme disable <关键词> - 禁用 meme\n"
+                "- /meme enable <关键词> - 启用 meme\n"
+                "- /meme blacklist - 查看被禁用的 meme 列表\n\n"
+                "用空格隔开参数，文本参数需用半角引号 (\") 包围"
+            )
             return
         keyword = str(keyword)
 
         result = self.manager.get_meme_info(keyword)
         if not result:
-            yield event.plain_result("未找到相关meme")
+            yield event.plain_result("未找到相关 meme")
             return
 
         meme_info, preview = result
@@ -50,53 +64,51 @@ class MemePlugin(Star):
         ]
         yield event.chain_result(chain)
 
-    @filter.command("禁用meme")
+    @meme.command("disable", alias={"禁用"})
     async def add_supervisor(
         self, event: AstrMessageEvent, meme_name: str | None = None
     ):
-        """禁用meme"""
+        """禁用 meme"""
         if not meme_name:
-            yield event.plain_result("未指定要禁用的meme")
+            yield event.plain_result("未指定要禁用的 meme")
             return
         if not self.manager.is_meme_keyword(meme_name):
             yield event.plain_result(f"meme: {meme_name} 不存在")
             return
         if meme_name in self.conf["memes_disabled_list"]:
-            yield event.plain_result(f"meme: {meme_name} 已被禁用")
+            yield event.plain_result(f"meme: {meme_name} 未启用")
             return
         self.conf["memes_disabled_list"].append(meme_name)
         self.conf.save_config()
-        yield event.plain_result(f"已禁用meme: {meme_name}")
-        logger.info(f"当前禁用meme: {self.conf['memes_disabled_list']}")
+        yield event.plain_result(f"已禁用 meme: {meme_name}")
+        logger.info(f"当前禁用 meme: {self.conf['memes_disabled_list']}")
 
-    @filter.command("启用meme")
+    @meme.command("enable", alias={"启用"})
     async def remove_supervisor(
         self, event: AstrMessageEvent, meme_name: str | None = None
     ):
-        """启用meme"""
+        """启用 meme"""
         if not meme_name:
-            yield event.plain_result("未指定要禁用的meme")
+            yield event.plain_result("未指定要启用的 meme")
             return
         if not self.manager.is_meme_keyword(meme_name):
             yield event.plain_result(f"meme: {meme_name} 不存在")
             return
         if meme_name not in self.conf["memes_disabled_list"]:
-            yield event.plain_result(f"meme: {meme_name} 未被禁用")
+            yield event.plain_result(f"meme: {meme_name} 未禁用")
             return
         self.conf["memes_disabled_list"].remove(meme_name)
         self.conf.save_config()
-        yield event.plain_result(f"已禁用meme: {meme_name}")
+        yield event.plain_result(f"已启用 meme: {meme_name}")
 
-    @filter.command("meme黑名单")
+    @meme.command("blacklist", alias={"黑名单", "禁用列表"})
     async def list_supervisors(self, event: AstrMessageEvent):
-        """查看禁用的meme"""
-        yield event.plain_result(f"当前禁用的meme: {self.conf['memes_disabled_list']}")
+        """查看被禁用的 meme 列表"""
+        yield event.plain_result(f"当前禁用的 meme: {self.conf['memes_disabled_list']}")
 
     @filter.event_message_type(EventMessageType.ALL)
     async def meme_handle(self, event: AstrMessageEvent):
-        """
-        处理 meme 生成的主流程
-        """
+        """处理 meme 生成的主流程"""
         if self.conf["need_prefix"] and not event.is_at_or_wake_command:
             return
         if self.conf["extra_prefix"] and not event.message_str.startswith(

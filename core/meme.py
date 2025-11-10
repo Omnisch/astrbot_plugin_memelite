@@ -45,7 +45,7 @@ class MemeManager:
     async def check_resources(self):
         if not self.conf["is_check_resources"]:
             return
-        logger.info("开始检查memes资源...")
+        logger.info("开始检查 memes 资源...")
         if self.is_py_version:
             asyncio.create_task(self.check_resources_func())
         else:
@@ -94,7 +94,7 @@ class MemeManager:
     def get_meme_info(self, keyword: str) -> tuple[str, bytes] | None:
         """
         根据关键词返回 meme 的详情
-        返回 (描述文本, 预览图bytes)
+        返回 (描述文本, 预览图 bytes)
         如果未找到，返回 None
         """
         meme = self.find_meme(keyword)
@@ -113,20 +113,20 @@ class MemeManager:
         # 组装信息字符串
         meme_info = ""
         if meme.key:
-            meme_info += f"名称：{meme.key}\n"
+            meme_info += f"键值：{meme.key}\n"
         if keywords:
-            meme_info += f"别名：{keywords}\n"
+            meme_info += f"名称：{keywords}\n"
         if p.max_images > 0:
             meme_info += (
-                f"所需图片：{p.min_images}张\n"
+                f"所需图片：{p.min_images} 张\n"
                 if p.min_images == p.max_images
-                else f"所需图片：{p.min_images}~{p.max_images}张\n"
+                else f"所需图片：{p.min_images}~{p.max_images} 张\n"
             )
         if p.max_texts > 0:
             meme_info += (
-                f"所需文本：{p.min_texts}段\n"
+                f"所需文本：{p.min_texts} 段\n"
                 if p.min_texts == p.max_texts
-                else f"所需文本：{p.min_texts}~{p.max_texts}段\n"
+                else f"所需文本：{p.min_texts}~{p.max_texts} 段\n"
             )
         if p.default_texts:
             meme_info += f"默认文本：{p.default_texts}\n"
@@ -139,7 +139,7 @@ class MemeManager:
     async def generate_meme(
         self, event: AstrMessageEvent, keyword: str
     ) -> bytes | None:
-        # 匹配meme
+        # 匹配 meme
         meme = self.find_meme(keyword)
         if not meme:
             return
