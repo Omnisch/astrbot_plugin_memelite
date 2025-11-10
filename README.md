@@ -145,7 +145,7 @@ apt-get update && apt-get install -y libgl1 libglib2.0-0
 
 - Windows: `AstrBot\.venv\Lib\site-packages\meme_generator`
 - Linux: `AstrBot/venv/lib/python3.10/site-packages/meme_generator`
-- MacOS: 没用过
+- MacOS: `/usr/local/lib/python3.10/site-packages`
 - Docker: 问问用 Docker 的人
 
 ### Rust 版安装教程（会复杂一点点）

@@ -6,7 +6,7 @@
         "default": true
     },
     "extra_prefix": {
-        "description": "'额外前缀",
+        "description": "额外前缀",
         "hint": "填写后, 需要额外附加一个前缀来触发meme, 留空则不启用",
         "type": "string",
         "default": ""
